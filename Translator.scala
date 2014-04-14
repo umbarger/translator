@@ -6,12 +6,10 @@ import scala.io.Source
 import java.lang.String
 import scala.collection.mutable.Map
 
-
 object Translator
 {
   def main( args: Array[String] )
   {
-
     // Please change these values to the appropriate paths/filenames
     val glossaryFileName: String = "glossary.txt"
     val toBeTranslatedFileName: String = "con.txt"
@@ -46,8 +44,7 @@ object Translator
 
 class Writer( outFile: String )
 {
-
-import java.io._
+  import java.io._
 
   def write( wordList: List[String] ) : Unit = 
   {
