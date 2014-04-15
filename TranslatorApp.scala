@@ -84,13 +84,11 @@ object TranslatorApp extends SimpleSwingApplication
     contents = new BorderPanel
     {
       layout(label) = North
-      //layout(glossaryButton) = West
       layout(gridPanel) = Center
-      //layout(runButton) = East
       layout(textField) = South
     }
 
-    size = new Dimension ( 600, 300 )
+    size = new Dimension ( 400, 175 )
     menuBar = new MenuBar
     {
       contents += new Menu("File")
@@ -136,11 +134,6 @@ object TranslatorApp extends SimpleSwingApplication
         runButton.enabled = true
       case ButtonClicked(component) if component == runButton =>
         val translator = new Translator( glossaryFileName, toBeTranslatedFileName, translatedTextOutputFileName )
-
-        
- //     case MouseClicked(_, point, _, _, _) =>
- //       canvas.throwDart(new Dart(point.x, point.y, Color.black))
- //       textField.text = (s"You clicked in the Canvas at x=${point.x}, y=${point.y}.") 
     }
   }
 }
@@ -151,8 +144,6 @@ class Translator( var glossaryFileName: File, var toBeTranslatedFileName: File, 
   val writer = new Writer(translatedTextOutputFileName)
   val convert = Source.fromFile(toBeTranslatedFileName).getLines().toList map{_.split(' ').toList }
 
-  val box = new AttentionBox()
-  
   for ( eachLine <- convert ) 
   { 
     var wordList = List[String]()
@@ -195,30 +186,6 @@ class Writer( outFile: File )
   }
 }
 
-class AttentionBox extends MainFrame 
-{
-  var la = new Label("Attention!")
-
- // def setLabel( var newLabel: String ) : Unit = { label = newLabel }
-
-  title = "Attention!"
-
-  contents = new BoxPanel( Orientation.Vertical )
-  {
-    contents += Swing.VStrut(10)
-    contents += Swing.Glue
-    contents += Button("Press Me Please") { changeText() }
-  }
-
-  def changeText() {
-    val r = Dialog.showInput(contents.head, "New label text", initial=la.text)
-    r match {
-      case Some(s) => la.text = s
-      case None => 
-    }
-  }
-}
-
 class Glossary( glossaryFileName: File )
 {
   val glossaryList = Source.fromFile(glossaryFileName).getLines().toList map{ _.split(',').toList }
@@ -254,8 +221,7 @@ class Glossary( glossaryFileName: File )
           }
           do
           {
-            //val attentionBox = new AttentionBox()
-            //println("More than one definition exists for " + word + ". Please enter translation choice" + choiceString + "." )
+            println("More than one definition exists for " + word + ". Please enter translation choice" + choiceString + "." )
             choice = Console.readInt
           } while ( choice < 1 || choice > defs.length )
           choice -= 1
@@ -272,42 +238,3 @@ class Glossary( glossaryFileName: File )
     }
   }
 }
-
-//case class Dart(val x: Int, val y: Int, val color: java.awt.Color)
-
-// class Canvas extends Panel 
-// {
-//   import scala.swing.Panel
-//   import java.awt.{ Graphics2D, Color }
-
-//   var centerColor = Color.yellow
-  
-//   var darts = List[Dart]()
-
-//   override def paintComponent(g: Graphics2D) {
-    
-//     // Start by erasing this Canvas
-//     g.clearRect(0, 0, size.width, size.height)
-    
-//     // Draw background here
-//     g.setColor(Color.blue)
-//     g.fillOval(0, 0, 100, 100)
-//     g.setColor(Color.red)
-//     g.fillOval(20, 20, 60, 60)
-//     g.setColor(centerColor)
-//     g.fillOval(40, 40, 20, 20)
-    
-//     // Draw things that change on top of background
-//     for (dart <- darts) {
-//       g.setColor(dart.color)
-//       g.fillOval(dart.x, dart.y, 10, 10)
-//     }
-//   }
-
-//   /** Add a "dart" to list of things to display */
-//   def throwDart(dart: Dart) {
-//     darts = darts :+ dart
-//     // Tell Scala that the display should be repainted
-//     repaint()
-//   }
-// }
