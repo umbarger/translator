@@ -11,6 +11,7 @@ import event._
 import java.awt.{ Color, Graphics2D }
 import scala.util.Random
 import scala.swing.FileChooser
+import scala.swing.Component
 import java.io.File
 
 
@@ -26,59 +27,70 @@ object TranslatorApp extends SimpleSwingApplication
       font = new Font( "Ariel", java.awt.Font.ITALIC, 24 )
     }
 
-    val button = new Button 
+    val glossaryButton = new Button
     {
-      text = "Pick file to translate"
+      text = "Select Glossary"
+      foreground = Color.green
+      background = Color.white
+      borderPainted = true
+      enabled = true
+      tooltip = "Select the glossary file."
+    }
+
+    val inButton = new Button 
+    {
+      text = "File to Translate"
       foreground = Color.blue
       background = Color.red
       borderPainted = true
-      enabled = true
-      tooltip = "Click to throw a dart"
+      enabled = false
+      tooltip = "Click to select a text file to translate."
     }
 
-    val toggle = new ToggleButton { text = "Toggle" }
-    val checkBox = new CheckBox { text = "Check me" }
+    val saveButton = new Button
+    {
+      text = "Save as:"
+      foreground = Color.red
+      background = Color.blue
+      borderPainted = true
+      enabled = false
+      tooltip = "Click to select translation name and directory."
+    }
+
+    val runButton = new Button
+    {
+      text = "Translate!"
+      foreground = Color.black
+      background = Color.green
+      borderPainted = true
+      enabled = false
+      tooltip = "Make sure you pick your input and save as files first."
+    }
     
     val textField = new TextField 
     {
       columns = 10
-      text = "Click on the target!"
+      text = "Please select a file to translate."
     }
 
-    val inField = new TextField 
+   val gridPanel = new GridPanel( 1, 4 )
     {
-      columns = 20
-      text = "Click on target!"
-    }
-
-    val textArea = new TextArea
-    {
-      text = "initial text \n line two"
-      background = Color.green
-    }
-
-    val canvas = new Canvas
-    {
-      preferredSize = new Dimension( 100, 100 )
-    }
-
-    val gridPanel = new GridPanel( 1, 2 )
-    {
-      contents += checkBox
-      contents += label
-      contents += textArea
-    }
+       contents += glossaryButton
+       contents += inButton
+       contents += saveButton
+       contents += runButton
+     }
 
     contents = new BorderPanel
     {
-      layout(gridPanel) = North
-      layout(button) = West
-      layout(canvas) = Center
-      layout(toggle) = East
+      layout(label) = North
+      //layout(glossaryButton) = West
+      layout(gridPanel) = Center
+      //layout(runButton) = East
       layout(textField) = South
     }
 
-    size = new Dimension ( 300, 200 )
+    size = new Dimension ( 600, 300 )
     menuBar = new MenuBar
     {
       contents += new Menu("File")
@@ -87,39 +99,60 @@ object TranslatorApp extends SimpleSwingApplication
       }
     }
 
-    listenTo(button)
-    listenTo(toggle)
-    listenTo(canvas.mouse.clicks)
+    listenTo(glossaryButton)
+    listenTo(inButton)
+    listenTo(saveButton)
+    listenTo(runButton)
+
+    var glossaryFileName = new File("glossary.txt")
+    var toBeTranslatedFileName = new File("con.txt")
+    var translatedTextOutputFileName = new File("translated.txt")
 
     reactions += 
     {
-      case ButtonClicked(component) if component == button =>
-        val glossaryFileName = new File("glossary.txt")
+      case ButtonClicked(component) if component == glossaryButton =>
+        //val glossaryFileName = new File("glossary.txt")
         val chooser = new FileChooser
         val response = chooser.showOpenDialog(null) 
-        if (response == FileChooser.Result.Approve) { val glossaryFileName = chooser.selectedFile } 
-        textField.text = s"File: $glossaryFileName"
-      case ButtonClicked(component) if component == toggle =>
-        toggle.text = if (toggle.selected) "On" else "Off"
-      case MouseClicked(_, point, _, _, _) =>
-        canvas.throwDart(new Dart(point.x, point.y, Color.black))
-        textField.text = (s"You clicked in the Canvas at x=${point.x}, y=${point.y}.") 
+        if (response == FileChooser.Result.Approve) { glossaryFileName = chooser.selectedFile } 
+        textField.text = s"Glossary: $glossaryFileName - Now pick file to translate."
+        glossaryButton.text = "Got it!"
+        inButton.enabled = true
+      case ButtonClicked(component) if component == inButton =>
+        //val toBeTranslatedFileName = new File("con.txt")
+        val chooser = new FileChooser
+        val response = chooser.showOpenDialog(null) 
+        if (response == FileChooser.Result.Approve) { toBeTranslatedFileName = chooser.selectedFile } 
+        textField.text = s"File: $toBeTranslatedFileName - Now pick where to save."
+        inButton.text = "Got it!"
+        saveButton.enabled = true
+      case ButtonClicked(component) if component == saveButton =>
+        //val translatedTextOutputFileName = new File("translated.txt")
+        val chooser = new FileChooser
+        val response = chooser.showSaveDialog(null)  
+        if (response == FileChooser.Result.Approve) { translatedTextOutputFileName = chooser.selectedFile } 
+        textField.text = s"Saving as: $translatedTextOutputFileName - Ready to translate!"
+        inButton.text = "Got it!"
+        runButton.enabled = true
+      case ButtonClicked(component) if component == runButton =>
+        val translator = new Translator( glossaryFileName, toBeTranslatedFileName, translatedTextOutputFileName )
+
+        
+ //     case MouseClicked(_, point, _, _, _) =>
+ //       canvas.throwDart(new Dart(point.x, point.y, Color.black))
+ //       textField.text = (s"You clicked in the Canvas at x=${point.x}, y=${point.y}.") 
     }
   }
 }
 
-object Translate
+class Translator( var glossaryFileName: File, var toBeTranslatedFileName: File, var translatedTextOutputFileName: File )
 {
-  // Please change these values to the appropriate paths/filenames
-  val glossaryFileName: String = "glossary.txt"
-  val toBeTranslatedFileName: String = "con.txt"
-  val translatedTextOutputFileName: String = "translated.txt"
-
   val glossary = new Glossary(glossaryFileName)
   val writer = new Writer(translatedTextOutputFileName)
-
   val convert = Source.fromFile(toBeTranslatedFileName).getLines().toList map{_.split(' ').toList }
 
+  val box = new AttentionBox()
+  
   for ( eachLine <- convert ) 
   { 
     var wordList = List[String]()
@@ -137,11 +170,11 @@ object Translate
     writer.write(wordList)
     writer.write(defList)
   }
-  println("Translated file saved as translated.txt" )
+  println(s"Translated file saved as $translatedTextOutputFileName" )
 }
 
 
-class Writer( outFile: String )
+class Writer( outFile: File )
 {
   import java.io._
 
@@ -155,14 +188,38 @@ class Writer( outFile: String )
       wordString += " " 
     }
 
-    val bw = new BufferedWriter( new FileWriter( new File(outFile), true ))
+    val bw = new BufferedWriter( new FileWriter( outFile, true ))
     bw.write(wordString) 
     bw.newLine() 
     bw.close()
   }
 }
 
-class Glossary( glossaryFileName: String )
+class AttentionBox extends MainFrame 
+{
+  var la = new Label("Attention!")
+
+ // def setLabel( var newLabel: String ) : Unit = { label = newLabel }
+
+  title = "Attention!"
+
+  contents = new BoxPanel( Orientation.Vertical )
+  {
+    contents += Swing.VStrut(10)
+    contents += Swing.Glue
+    contents += Button("Press Me Please") { changeText() }
+  }
+
+  def changeText() {
+    val r = Dialog.showInput(contents.head, "New label text", initial=la.text)
+    r match {
+      case Some(s) => la.text = s
+      case None => 
+    }
+  }
+}
+
+class Glossary( glossaryFileName: File )
 {
   val glossaryList = Source.fromFile(glossaryFileName).getLines().toList map{ _.split(',').toList }
   val glossaryMap:Map[String, List[String]] = Map()
@@ -197,7 +254,8 @@ class Glossary( glossaryFileName: String )
           }
           do
           {
-            println("More than one definition exists for " + word + ". Please enter translation choice" + choiceString + "." )
+            //val attentionBox = new AttentionBox()
+            //println("More than one definition exists for " + word + ". Please enter translation choice" + choiceString + "." )
             choice = Console.readInt
           } while ( choice < 1 || choice > defs.length )
           choice -= 1
@@ -215,41 +273,41 @@ class Glossary( glossaryFileName: String )
   }
 }
 
-case class Dart(val x: Int, val y: Int, val color: java.awt.Color)
+//case class Dart(val x: Int, val y: Int, val color: java.awt.Color)
 
-class Canvas extends Panel 
-{
-  import scala.swing.Panel
-  import java.awt.{ Graphics2D, Color }
+// class Canvas extends Panel 
+// {
+//   import scala.swing.Panel
+//   import java.awt.{ Graphics2D, Color }
 
-  var centerColor = Color.yellow
+//   var centerColor = Color.yellow
   
-  var darts = List[Dart]()
+//   var darts = List[Dart]()
 
-  override def paintComponent(g: Graphics2D) {
+//   override def paintComponent(g: Graphics2D) {
     
-    // Start by erasing this Canvas
-    g.clearRect(0, 0, size.width, size.height)
+//     // Start by erasing this Canvas
+//     g.clearRect(0, 0, size.width, size.height)
     
-    // Draw background here
-    g.setColor(Color.blue)
-    g.fillOval(0, 0, 100, 100)
-    g.setColor(Color.red)
-    g.fillOval(20, 20, 60, 60)
-    g.setColor(centerColor)
-    g.fillOval(40, 40, 20, 20)
+//     // Draw background here
+//     g.setColor(Color.blue)
+//     g.fillOval(0, 0, 100, 100)
+//     g.setColor(Color.red)
+//     g.fillOval(20, 20, 60, 60)
+//     g.setColor(centerColor)
+//     g.fillOval(40, 40, 20, 20)
     
-    // Draw things that change on top of background
-    for (dart <- darts) {
-      g.setColor(dart.color)
-      g.fillOval(dart.x, dart.y, 10, 10)
-    }
-  }
+//     // Draw things that change on top of background
+//     for (dart <- darts) {
+//       g.setColor(dart.color)
+//       g.fillOval(dart.x, dart.y, 10, 10)
+//     }
+//   }
 
-  /** Add a "dart" to list of things to display */
-  def throwDart(dart: Dart) {
-    darts = darts :+ dart
-    // Tell Scala that the display should be repainted
-    repaint()
-  }
-}
+//   /** Add a "dart" to list of things to display */
+//   def throwDart(dart: Dart) {
+//     darts = darts :+ dart
+//     // Tell Scala that the display should be repainted
+//     repaint()
+//   }
+// }
