@@ -161,7 +161,7 @@ class Translator( var glossaryFileName: File, var toBeTranslatedFileName: File, 
     writer.write(wordList)
     writer.write(defList)
   }
-  //println(s"Translated file saved as $translatedTextOutputFileName" )
+  println(s"Translated file saved as $translatedTextOutputFileName" )
 }
 
 

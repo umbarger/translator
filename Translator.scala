@@ -65,7 +65,7 @@ class Writer( outFile: String )
   }
 }
 
-class Glossary( glossaryFileName: File )
+class Glossary( glossaryFileName: String )
 {
   val glossaryList = Source.fromFile(glossaryFileName).getLines().toList map{ _.split(',').toList }
   val glossaryMap:Map[String, List[String]] = Map()
