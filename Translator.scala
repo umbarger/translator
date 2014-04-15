@@ -5,13 +5,22 @@
 import scala.io.Source
 import java.lang.String
 import scala.collection.mutable.Map
+import scala.swing.FileChooser
+import java.io.File
 
 object Translator
 {
   def main( args: Array[String] )
   {
+    
+    import scala.swing.FileChooser, java.io.File 
+    val glossaryFileName = new File("glossary.txt")   // with a relative or absolute path
+    val chooser = new FileChooser
+    val response = chooser.showOpenDialog{ title = "File to translate:"}  // to read a file
+    //val response = chooser.showSaveDialog(null)  // to write a file
+    if (response == FileChooser.Result.Approve) { val glossaryFileName = chooser.selectedFile } 
     // Please change these values to the appropriate paths/filenames
-    val glossaryFileName: String = "glossary.txt"
+    //val glossaryFileName: String = "glossary.txt"
     val toBeTranslatedFileName: String = "con.txt"
     val translatedTextOutputFileName: String = "translated.txt"
 
@@ -63,7 +72,7 @@ class Writer( outFile: String )
   }
 }
 
-class Glossary( glossaryFileName: String )
+class Glossary( glossaryFileName: File )
 {
   val glossaryList = Source.fromFile(glossaryFileName).getLines().toList map{ _.split(',').toList }
   val glossaryMap:Map[String, List[String]] = Map()
